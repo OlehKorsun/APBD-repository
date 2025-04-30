@@ -9,6 +9,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<ITripsService, TripsService>(); // jeśli gdzieś wystąpi ITripsService, stwórz instancję TripsService
+builder.Services.AddScoped<IClientsService, ClientsService>(); // jeśli gdzieś wystąpi ITripsService, stwórz instancję TripsService
 
 var app = builder.Build();
 

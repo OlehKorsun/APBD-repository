@@ -5,8 +5,8 @@ namespace WebApplication1.Services;
 
 public class TripsService : ITripsService
 {
-    private string _connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=APBD;Integrated Security=True;";
-    public async Task<List<TripDTO>> GetTripsAsync()   // połączyłem się do lokalnej bazy o nazwie APBD
+    private string _connectionString = "Data Source=db-mssql;Initial Catalog=2019SBD;Integrated Security=True;Trust Server Certificate=True";
+    public async Task<List<TripDTO>> GetTripsAsync()   // połączyłem się do lokalnej bazy o nazwie 2019SBD
     {
         var trips = new List<TripDTO>();
         
