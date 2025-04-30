@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using WebApplication1.Models.DTOs;
 
 namespace WebApplication1.Services
@@ -40,6 +41,61 @@ namespace WebApplication1.Services
                 }
             }
             return clients;
+        }
+
+        
+        public async Task<List<ClientTripDTO>> GetClientTripsByClientId(int id)
+        {
+            var trips = new List<ClientTripDTO>();
+            var clientExists = false;
+            
+            var cmdText = @"select Client.IdClient, Trip.IdTrip, Trip.Name, Description, DateFrom, DateTo, MaxPeople, RegisteredAt, PaymentDate
+                            from Client 
+                            join Client_Trip on Client.IdClient = Client_Trip.IdClient
+                            join Trip on Trip.IdTrip = Client_Trip.IdTrip
+                            where Client.IdClient = @id;";
+            
+            
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            using (SqlCommand cmd = new SqlCommand(cmdText, conn))
+            {
+                await conn.OpenAsync();
+                cmd.Parameters.AddWithValue("@id", id);
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    
+                    
+                    
+                    while (await reader.ReadAsync())
+                    {
+                        
+                        clientExists = true;
+                        if (reader["IdTrip"] == DBNull.Value)
+                            continue;
+                        
+                        trips.Add(new ClientTripDTO()
+                        {
+                            IdTrip = reader.GetInt32(1),
+                            Name = (reader.GetString(2)),
+                            Description = (reader.GetString(3)),
+                            DateFrom = reader.GetDateTime(4),
+                            DateTo = reader.GetDateTime(5),
+                            MaxPeople = reader.GetInt32(6),
+                            RegisteredAt = reader.GetInt32(7),
+                            PaymentDate = reader.IsDBNull(8)  ? (int?)null : reader.GetInt32(8),
+                        });
+                    }
+                }
+            }
+
+
+            if (!clientExists)
+            {
+                return null;
+            }
+
+
+            return trips;
         }
         
     }

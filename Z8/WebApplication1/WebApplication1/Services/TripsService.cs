@@ -10,7 +10,10 @@ public class TripsService : ITripsService
     {
         var trips = new List<TripDTO>();
         
-        var cmdText = @"select IdTrip, Name from Trip";
+        var cmdText = @"select Trip.IdTrip, Trip.Name, Description, DateFrom, DateTo, MaxPeople, Country.Name
+                        from Trip 
+                        join Country_Trip on Trip.IdTrip = Country_Trip.IdTrip
+                        join Country on Country.IdCountry = Country_Trip.IdCountry";
 
         using (SqlConnection conn = new SqlConnection(_connectionString))
         using (SqlCommand cmd = new SqlCommand(cmdText, conn))
@@ -23,12 +26,27 @@ public class TripsService : ITripsService
                 int idTripOrdinal = reader.GetOrdinal("IdTrip");
                 while (await reader.ReadAsync())
                 {
-                    
-                    trips.Add(new TripDTO()
+                    if (trips.Exists(t => t.IdTrip == reader.GetInt32(idTripOrdinal)))
                     {
-                        IdTrip = reader.GetInt32(idTripOrdinal),   // argument - numer kolumny, można szukać automatycznie po nazwie kolumny
-                        Name = reader.GetString(1),
-                    });
+                        trips.Find(t => t.IdTrip == reader.GetInt32(idTripOrdinal)).Countries
+                            .Add(new CountryDTO(reader.GetString(6)));
+                    }
+                    else
+                    {
+                        TripDTO tripDto = new TripDTO()
+                        {
+                            IdTrip = reader.GetInt32(idTripOrdinal),
+                            Name = reader.GetString(1),
+                            Description = reader.GetString(2),
+                            DateFrom = reader.GetDateTime(3),
+                            DateTo = reader.GetDateTime(4),
+                            MaxPeople = reader.GetInt32(5)
+                        };
+                        tripDto.Countries.Add(new CountryDTO(reader.GetString(6)));
+                    trips.Add(tripDto);
+                    }
+
+                    
                 }
             }
             
