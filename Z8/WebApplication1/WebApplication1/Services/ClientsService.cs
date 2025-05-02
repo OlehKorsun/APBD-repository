@@ -70,12 +70,8 @@ namespace WebApplication1.Services
                 cmd.Parameters.AddWithValue("@id", id);
                 using (var reader = await cmd.ExecuteReaderAsync())
                 {
-                    
-                    
-                    
                     while (await reader.ReadAsync())
                     {
-                        
                         clientExists = true;
                         if (reader["IdTrip"] == DBNull.Value)
                             continue;
@@ -100,35 +96,34 @@ namespace WebApplication1.Services
                             trip.Countries.Add(new CountryDTO(reader.GetString(9)));
                             trips.Add(trip);
                         }
-
-                        
                     }
                 }
             }
-
-
             if (!clientExists)
             {
                 return null;
             }
-
-
             return trips;
         }
 
 
 
 
-
+        
+        
+        
+        // Endpoint 3
         public async Task<int> CreateClientAsync([FromBody]ClientCreateDTO client)
         {
-
+            
+            // Jeśli problem z danymi wejściowymi zwracam -1
             if (string.IsNullOrEmpty(client.FirstName) || string.IsNullOrEmpty(client.LastName) ||
-                string.IsNullOrEmpty(client.Pesel))
+                string.IsNullOrEmpty(client.Pesel) || string.IsNullOrEmpty(client.Email) || string.IsNullOrEmpty(client.Telephone) ||
+                client.Pesel.Length!=11)
             {
                 return -1;
             }
-            
+
             string query = @"Insert Into Client(FirstName, LastName, Email, Telephone, Pesel) 
             Values (@FirstName, @LastName, @Email, @Telephone, @Pesel);
             Select Scope_Identity();";
@@ -149,6 +144,63 @@ namespace WebApplication1.Services
             }
            
         }
+
+
+
+
+
+
+        // Endpoint 4
+        public async Task<bool> ZarejestrujKlientaNaWycieczke(int id, int tripId)
+        {
+            string checkQuery = @"Select 
+                                (Select Count(1) From Client Where IdClient = @id) AS CzyIstniejeClient
+                                (Select Count(1) From Trip Where IdTrip = @tripId) AS CzyIstniejeTrip
+                                (Select Count(1) From Client_Trip Where IdTrip = @tripId) AS ZapisanoClientow
+                                (Select MaxPeople from Trip Where IdTrip = @tripId) AS MaxPeople,
+                                (SELECT COUNT(1) FROM Client_Trip WHERE IdClient = @id AND IdTrip = @idTrip) AS CzyJestJuzZapisany;";
+            
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            using (SqlCommand cmd = new SqlCommand(checkQuery, conn))
+            {
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.Parameters.AddWithValue("@tripId", tripId);
+                await conn.OpenAsync();
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    await reader.ReadAsync();
+                    var CzyIstniejeClient = reader.GetInt32(0);
+                    var CzyIstniejeTrip = reader.GetInt32(1);
+                    var ZapisanoClientow = reader.GetInt32(2);
+                    var MaxPeople = reader.GetInt32(3);
+                    var CzyJestJuzZapisany = reader.GetInt32(4);
+                    
+                    // Sprawdzam czy istnieją client i wycieczka oraz czy nie przekroczono limitu oraz czy client nie jest jeszcze zapisany na tą wycieczkę
+                    if (CzyIstniejeClient == 0 || CzyIstniejeTrip == 0 || ZapisanoClientow >= MaxPeople || CzyJestJuzZapisany == 1)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // Wstawiam do bazy danych nowy rekord
+            var data = int.Parse(DateTime.Now.ToString("yyyyMMdd"));
+            string insertQuery = @"INSERT INTO CLIENT_TRIP(IdClient, IdTrip, RegisteredAt) VALUES (@id, @idTrip, @data) ";
+            
+            using(SqlConnection conn = new SqlConnection(_connectionString))
+            using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
+            {
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.Parameters.AddWithValue("@idTrip", tripId);
+                cmd.Parameters.AddWithValue("@data", data);
+                await conn.OpenAsync();
+                var result = await cmd.ExecuteNonQueryAsync();
+                return result > 0;
+            }
+        }
+        
+        
         
     }
 }

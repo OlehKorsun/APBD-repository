@@ -10,4 +10,7 @@ public interface IClientsService
     Task<List<ClientTripDTO>> GetClientTripsByClientId(int id);
     
     Task<int> CreateClientAsync(ClientCreateDTO client);
+    
+    
+    Task<bool> ZarejestrujKlientaNaWycieczke(int id, int tripId);
 }

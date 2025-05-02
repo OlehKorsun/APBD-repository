@@ -46,12 +46,25 @@ namespace WebApplication1.Controllers
         public async Task<IActionResult> PostClients(ClientCreateDTO client)
         {
             var result = _clientsService.CreateClientAsync(client);
-            Console.WriteLine(result.Result);
+            // Console.WriteLine(result.Result);
             if (result.Result == -1)
             {
-                return BadRequest();
+                return BadRequest("Problem z danymi wejściowymi");
             }
             return Created("", result.Result);
+        }
+
+
+
+        [HttpPut("{id}/trips/{tripId}")]
+        public async Task<IActionResult> RejestrujKlientaNaWycieczke(int id, int tripId)
+        {
+            var result = _clientsService.ZarejestrujKlientaNaWycieczke(id, tripId);
+            if (!result.Result)
+            {
+                return Conflict();
+            }
+            return Ok();
         }
         
         
