@@ -157,7 +157,7 @@ namespace WebApplication1.Services
                                 (Select Count(1) From Client Where IdClient = @id),
                                 (Select Count(1) From Trip Where IdTrip = @tripId),
                                 (Select Count(1) From Client_Trip Where IdTrip = @tripId),
-                                (Select MaxPeople from Trip Where IdTrip = @tripId),
+                                isnull((Select MaxPeople from Trip Where IdTrip = @tripId), 0),
                                 (SELECT COUNT(1) FROM Client_Trip WHERE IdClient = @id AND IdTrip = @tripId);";
             
             using (SqlConnection conn = new SqlConnection(_connectionString))
@@ -177,7 +177,7 @@ namespace WebApplication1.Services
                     var CzyJestJuzZapisany = reader.GetInt32(4);
                     
                     // Sprawdzam czy istnieją client i wycieczka oraz czy nie przekroczono limitu oraz czy client nie jest jeszcze zapisany na tą wycieczkę
-                    if (CzyIstniejeClient == 0 || CzyIstniejeTrip == 0 || ZapisanoClientow >= MaxPeople || CzyJestJuzZapisany == 1)
+                    if (CzyIstniejeClient == 0 || CzyIstniejeTrip == 0 || ZapisanoClientow+1 > MaxPeople || CzyJestJuzZapisany == 1)
                     {
                         return false;
                     }
@@ -186,7 +186,7 @@ namespace WebApplication1.Services
 
             // Wstawiam do bazy danych nowy rekord
             var data = int.Parse(DateTime.Now.ToString("yyyyMMdd"));
-            string insertQuery = @"INSERT INTO CLIENT_TRIP(IdClient, IdTrip, RegisteredAt) VALUES (@id, @idTrip, @data) ";
+            string insertQuery = @"INSERT INTO CLIENT_TRIP(IdClient, IdTrip, RegisteredAt) VALUES (@id, @idTrip, @data)";
             
             using(SqlConnection conn = new SqlConnection(_connectionString))
             using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
@@ -199,8 +199,44 @@ namespace WebApplication1.Services
                 return result > 0;
             }
         }
-        
-        
-        
+
+
+        // Endpoint 5
+        public async Task<bool> DeleteClientTrip(int id, int tripId)
+        {
+
+            // Sprawdzam czy jest przypisanie klienta do wycieczki
+            string checkQuery = @"Select Count(1) From Client_Trip Where IdClient = @id and IdTrip = @tripId;";
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            using (SqlCommand cmd = new SqlCommand(checkQuery, conn))
+            {
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.Parameters.AddWithValue("@tripId", tripId);
+                await conn.OpenAsync();
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    await reader.ReadAsync();
+                    var res = reader.GetInt32(0);
+
+                    if (res == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // Usuwam klienta z wycieczki
+            string deleteQuery = @"Delete From Client_Trip Where IdClient = @id and IdTrip = @tripId;";
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            using (SqlCommand cmd = new SqlCommand(deleteQuery, conn))
+            {
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.Parameters.AddWithValue("@tripId", tripId);
+                await conn.OpenAsync();
+                var result = cmd.ExecuteNonQueryAsync();
+                return result.Result == 1;
+            }
+        }
     }
 }

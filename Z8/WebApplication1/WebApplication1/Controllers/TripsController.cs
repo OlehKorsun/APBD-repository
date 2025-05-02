@@ -26,17 +26,6 @@ namespace WebApplication1.Controllers
             var trips = await _tripService.GetTripsAsync();
             return Ok(trips);
         }
-
-
-        // [HttpGet("{id}")]
-        // public async Task<IActionResult> GetTripById(int id)
-        // {
-        //     if (!await _tripService.DoesTripExists(id))
-        //     {
-        //         return NotFound();
-        //     }
-        //
-        //     return Ok();
-        // }
+        
     }
 }

@@ -64,7 +64,22 @@ namespace WebApplication1.Controllers
             {
                 return Conflict();
             }
-            return Ok();
+            return Ok("Udało się poprawnie przypisać klienta do wycieczki");
+        }
+
+
+
+
+
+        [HttpDelete("{id}/trips/{tripId}")]
+        public async Task<IActionResult> DeleteClientTrip(int id, int tripId)
+        {
+            var result = _clientsService.DeleteClientTrip(id, tripId);
+            if (!result.Result)
+            {
+                return Conflict();
+            }
+            return Ok("Udało się poprawnie usunąć klienta z wycieczki");
         }
         
         

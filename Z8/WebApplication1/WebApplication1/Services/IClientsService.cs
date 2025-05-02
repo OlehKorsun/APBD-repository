@@ -13,4 +13,6 @@ public interface IClientsService
     
     
     Task<bool> ZarejestrujKlientaNaWycieczke(int id, int tripId);
+    
+    Task<bool> DeleteClientTrip(int id, int tripId);
 }
