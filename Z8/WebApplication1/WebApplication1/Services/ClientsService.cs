@@ -154,11 +154,11 @@ namespace WebApplication1.Services
         public async Task<bool> ZarejestrujKlientaNaWycieczke(int id, int tripId)
         {
             string checkQuery = @"Select 
-                                (Select Count(1) From Client Where IdClient = @id) AS CzyIstniejeClient
-                                (Select Count(1) From Trip Where IdTrip = @tripId) AS CzyIstniejeTrip
-                                (Select Count(1) From Client_Trip Where IdTrip = @tripId) AS ZapisanoClientow
-                                (Select MaxPeople from Trip Where IdTrip = @tripId) AS MaxPeople,
-                                (SELECT COUNT(1) FROM Client_Trip WHERE IdClient = @id AND IdTrip = @idTrip) AS CzyJestJuzZapisany;";
+                                (Select Count(1) From Client Where IdClient = @id),
+                                (Select Count(1) From Trip Where IdTrip = @tripId),
+                                (Select Count(1) From Client_Trip Where IdTrip = @tripId),
+                                (Select MaxPeople from Trip Where IdTrip = @tripId),
+                                (SELECT COUNT(1) FROM Client_Trip WHERE IdClient = @id AND IdTrip = @tripId);";
             
             using (SqlConnection conn = new SqlConnection(_connectionString))
             using (SqlCommand cmd = new SqlCommand(checkQuery, conn))
