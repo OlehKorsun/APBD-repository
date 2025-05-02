@@ -44,15 +44,22 @@ namespace WebApplication1.Services
         }
 
         
+        
+        
+        
+        // Endpoint 2
         public async Task<List<ClientTripDTO>> GetClientTripsByClientId(int id)
         {
             var trips = new List<ClientTripDTO>();
             var clientExists = false;
             
-            var cmdText = @"select Client.IdClient, Trip.IdTrip, Trip.Name, Description, DateFrom, DateTo, MaxPeople, RegisteredAt, PaymentDate
+            var cmdText = @"select Client.IdClient, Trip.IdTrip, Trip.Name, Description, DateFrom, 
+                            DateTo, MaxPeople, RegisteredAt, PaymentDate, Country.Name
                             from Client 
                             join Client_Trip on Client.IdClient = Client_Trip.IdClient
                             join Trip on Trip.IdTrip = Client_Trip.IdTrip
+                            join Country_Trip on Trip.IdTrip = Country_Trip.IdTrip
+                            join Country on Country.IdCountry = Country_Trip.IdCountry
                             where Client.IdClient = @id;";
             
             
@@ -72,18 +79,29 @@ namespace WebApplication1.Services
                         clientExists = true;
                         if (reader["IdTrip"] == DBNull.Value)
                             continue;
-                        
-                        trips.Add(new ClientTripDTO()
+
+                        if (trips.Exists(t => t.IdTrip == reader.GetInt32(1)))
                         {
-                            IdTrip = reader.GetInt32(1),
-                            Name = (reader.GetString(2)),
-                            Description = (reader.GetString(3)),
-                            DateFrom = reader.GetDateTime(4),
-                            DateTo = reader.GetDateTime(5),
-                            MaxPeople = reader.GetInt32(6),
-                            RegisteredAt = reader.GetInt32(7),
-                            PaymentDate = reader.IsDBNull(8)  ? (int?)null : reader.GetInt32(8),
-                        });
+                            trips.Find(t => t.IdTrip == reader.GetInt32(1)).Countries.Add(new CountryDTO(reader.GetString(9)));
+                        }
+                        else
+                        {
+                            var trip = new ClientTripDTO()
+                            {
+                                IdTrip = reader.GetInt32(1),
+                                Name = (reader.GetString(2)),
+                                Description = (reader.GetString(3)),
+                                DateFrom = reader.GetDateTime(4),
+                                DateTo = reader.GetDateTime(5),
+                                MaxPeople = reader.GetInt32(6),
+                                RegisteredAt = reader.GetInt32(7),
+                                PaymentDate = reader.IsDBNull(8) ? (int?)null : reader.GetInt32(8),
+                            };
+                            trip.Countries.Add(new CountryDTO(reader.GetString(9)));
+                            trips.Add(trip);
+                        }
+
+                        
                     }
                 }
             }
@@ -96,6 +114,40 @@ namespace WebApplication1.Services
 
 
             return trips;
+        }
+
+
+
+
+
+        public async Task<int> CreateClientAsync([FromBody]ClientCreateDTO client)
+        {
+
+            if (string.IsNullOrEmpty(client.FirstName) || string.IsNullOrEmpty(client.LastName) ||
+                string.IsNullOrEmpty(client.Pesel))
+            {
+                return -1;
+            }
+            
+            string query = @"Insert Into Client(FirstName, LastName, Email, Telephone, Pesel) 
+            Values (@FirstName, @LastName, @Email, @Telephone, @Pesel);
+            Select Scope_Identity();";
+            
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@FirstName", client.FirstName);
+                cmd.Parameters.AddWithValue("@LastName", client.LastName);
+                cmd.Parameters.AddWithValue("@Email", client.Email);
+                cmd.Parameters.AddWithValue("@Telephone", client.Telephone);
+                cmd.Parameters.AddWithValue("@Pesel", client.Pesel);
+                await conn.OpenAsync();
+                
+                var result = await cmd.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+                // return CreatedAtAction(nameof(GetClientsAsync), new { id = result }, client);
+            }
+           
         }
         
     }

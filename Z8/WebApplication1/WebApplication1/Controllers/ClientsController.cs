@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.Elfie.Serialization;
+using WebApplication1.Models.DTOs;
 using WebApplication1.Services;
 
 namespace WebApplication1.Controllers
@@ -38,8 +40,19 @@ namespace WebApplication1.Controllers
                 return Ok(trips);
             }
         }
-        
-        
+
+
+        [HttpPost]
+        public async Task<IActionResult> PostClients(ClientCreateDTO client)
+        {
+            var result = _clientsService.CreateClientAsync(client);
+            Console.WriteLine(result.Result);
+            if (result.Result == -1)
+            {
+                return BadRequest();
+            }
+            return Created("", result.Result);
+        }
         
         
     }
