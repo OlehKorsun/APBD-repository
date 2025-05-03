@@ -45,6 +45,10 @@ namespace WebApplication1.Controllers
         [HttpPost]
         public async Task<IActionResult> PostClients(ClientCreateDTO client)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             var result = _clientsService.CreateClientAsync(client);
             // Console.WriteLine(result.Result);
             if (result.Result == -1)
