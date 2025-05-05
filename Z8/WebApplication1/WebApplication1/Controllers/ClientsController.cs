@@ -66,7 +66,7 @@ namespace WebApplication1.Controllers
             var result = _clientsService.ZarejestrujKlientaNaWycieczke(id, tripId);
             if (!result.Result)
             {
-                return Conflict();
+                return Conflict("Nie udało się przypisać klienta do wycieczki");
             }
             return Ok("Udało się poprawnie przypisać klienta do wycieczki");
         }
@@ -81,7 +81,7 @@ namespace WebApplication1.Controllers
             var result = _clientsService.DeleteClientTrip(id, tripId);
             if (!result.Result)
             {
-                return Conflict();
+                return Conflict("Nie udało się usunąć klienta z wycieczki");
             }
             return Ok("Udało się poprawnie usunąć klienta z wycieczki");
         }
