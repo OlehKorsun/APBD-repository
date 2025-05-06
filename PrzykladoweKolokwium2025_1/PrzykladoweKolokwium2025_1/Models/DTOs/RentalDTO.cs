@@ -2,7 +2,7 @@ namespace PrzykladoweKolokwium2025_1.Models;
 
 public class RentalDTO : RentalClientDTO
 {
-    public DateTime returnDate { get; set; }
+    public DateTime? returnDate { get; set; }
     public string status { get; set; }
 }
 

@@ -31,6 +31,11 @@ namespace PrzykladoweKolokwium2025_1.Controllers
         public async Task<IActionResult> PostCustomerAsync(int customerId, RentalClientDTO customerDto)
         {
             var result = _customerService.PostCustomer(customerId, customerDto);
+
+            if (!result.Result)
+            {
+                return BadRequest("Nie udało się wyporzyczyć film");
+            }
             return Ok(result);
         }
     }
