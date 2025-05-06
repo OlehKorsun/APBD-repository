@@ -10,5 +10,5 @@ public class RentalClientDTO
 {
     public int id { get; set; }
     public DateTime rentalDate { get; set; }
-    public List<MowieDTO> mowies { get; set; }
+    public List<MowieDTO> movies { get; set; }
 }

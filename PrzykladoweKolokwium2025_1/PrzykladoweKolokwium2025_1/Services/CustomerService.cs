@@ -34,10 +34,10 @@ namespace PrzykladoweKolokwium2025_1.Services
                             if (customer.rentals.Exists(x => x.id == reader.GetInt32(3)))
                             {
                                 customer.rentals.Find(x => x.id == reader.GetInt32(3))
-                                    .mowies.Add(new MowieDTO()
+                                    .movies.Add(new MowieDTO()
                                 {
                                     title = reader.GetString(8),
-                                    priceAtRental = reader.GetDecimal(7),
+                                    rentalPrice = reader.GetDecimal(7),
                                 });
                             }
                             else
@@ -48,12 +48,12 @@ namespace PrzykladoweKolokwium2025_1.Services
                                     rentalDate = reader.GetDateTime(4),
                                     returnDate = reader.IsDBNull(5) ? (DateTime?)null : reader.GetDateTime(5),
                                     status = reader.GetString(6),
-                                    mowies = new List<MowieDTO>()
+                                    movies = new List<MowieDTO>()
                                     {
                                         new MowieDTO()
                                         {
                                             title = reader.GetString(8),
-                                            priceAtRental = reader.GetDecimal(7),
+                                            rentalPrice = reader.GetDecimal(7),
                                         }
                                     }
                                 });
@@ -74,12 +74,12 @@ namespace PrzykladoweKolokwium2025_1.Services
                                         rentalDate = reader.GetDateTime(4),
                                         returnDate = reader.IsDBNull(5) ? (DateTime?)null : reader.GetDateTime(5),
                                         status = reader.GetString(6),
-                                        mowies = new List<MowieDTO>()
+                                        movies = new List<MowieDTO>()
                                         {
                                             new MowieDTO()
                                             {
                                                 title = reader.GetString(8),
-                                                priceAtRental = reader.GetDecimal(7),
+                                                rentalPrice = reader.GetDecimal(7),
                                             }
                                         }
                                     }
@@ -97,13 +97,26 @@ namespace PrzykladoweKolokwium2025_1.Services
 
 
 
-        public async Task<bool> PostCustomer(int customerId, RentalClientDTO customerDto)
+        public async Task<bool> PostCustomerAsync(int customerId, RentalClientDTO customerDto)
         {
+            
+            Console.WriteLine(customerId);
+            foreach (var VARIABLE in customerDto.movies)
+            {
+                Console.WriteLine("Movies");
+                Console.WriteLine(VARIABLE.title);
+                Console.WriteLine(VARIABLE.rentalPrice);
+                Console.WriteLine("Movies");
+            }
+            
+            Console.WriteLine(customerDto.rentalDate);
+            Console.WriteLine(customerDto.id);
 
 
 
             int statusId = -1;
             List<int> mowiesIds = new List<int>();
+            Dictionary<int, MowieDTO> mowiesMap = new Dictionary<int, MowieDTO>();
             
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
@@ -113,15 +126,15 @@ namespace PrzykladoweKolokwium2025_1.Services
                 
                 try
                 {
-
-                    
                     // 1 sprawdź czy klient istnieje
                     string checkCustomerQuery = @"Select 1 From Customer Where customer_id = @customerId";
 
                     using (SqlCommand cmd = new SqlCommand(checkCustomerQuery, connection, transaction))
                     {
                         cmd.Parameters.AddWithValue("@customerId", customerId);
-                        int? rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        var rowsAffected = await cmd.ExecuteScalarAsync();
+                        Console.WriteLine("Customer ID: " + customerId);
+                        Console.WriteLine("Rows affected: " + rowsAffected);
                         if (rowsAffected == null)
                         {
                             transaction.Rollback();
@@ -130,20 +143,21 @@ namespace PrzykladoweKolokwium2025_1.Services
                     }
                     
                     // 2 sprawdzanie czy istnieją filmy i pobieranie ich id
-                    string checkMoviesQuery = @"Select movie_id From Movie Where title = '@title' and price_per_day = @price_per_day";
-                    foreach(MowieDTO movie in customerDto.mowies)
+                    string checkMoviesQuery = @"Select movie_id From Movie Where title = @title";
+                    foreach(MowieDTO movie in customerDto.movies)
                     {
                         using (SqlCommand cmd = new SqlCommand(checkMoviesQuery, connection, transaction))
                         {
                             cmd.Parameters.AddWithValue("@title", movie.title);
-                            cmd.Parameters.AddWithValue("@price_per_day", movie.priceAtRental);
-                            int? result = await cmd.ExecuteNonQueryAsync();
+                            var result = await cmd.ExecuteScalarAsync();
+                            Console.WriteLine("Result: " + result);
                             if (result == null)
                             {
                                 transaction.Rollback();
                                 return false;
                             }
                             mowiesIds.Add((int)result);
+                            mowiesMap.Add((int)result, movie);
                         }
                     }
                     
@@ -153,6 +167,7 @@ namespace PrzykladoweKolokwium2025_1.Services
                     using (SqlCommand cmd = new SqlCommand(statusQuery, connection, transaction))
                     {
                         var result = await cmd.ExecuteScalarAsync();
+                        Console.WriteLine("Resultat: " + result);
                         if (result == null)
                         {
                             transaction.Rollback();
@@ -164,7 +179,8 @@ namespace PrzykladoweKolokwium2025_1.Services
                     
                     // 4 wypożyczenie filmu
                     // 4.1 dodanie rekordu do tablicy Rent
-                    string rentQuery = @"Insert Into Rental(rental_id, rental_date, customer_id, status_id) Values (@rental_id, @rentalDate, @customerId, @statusId);)";
+                    string rentQuery = @"Insert Into Rental(rental_id, rental_date, customer_id, status_id) Values (@rental_id, @rentalDate, @customerId, @statusId);";
+                    Console.WriteLine("4.1");
                     using (SqlCommand cmd = new SqlCommand(rentQuery, connection, transaction))
                     {
                         cmd.Parameters.AddWithValue("@rental_id", customerDto.id);
@@ -173,6 +189,7 @@ namespace PrzykladoweKolokwium2025_1.Services
                         cmd.Parameters.AddWithValue("@statusId", statusId);
                         
                         var result = await cmd.ExecuteNonQueryAsync();
+                        Console.WriteLine("Result: " + result);
                         if (result == 0)
                         {
                             transaction.Rollback();
@@ -181,23 +198,28 @@ namespace PrzykladoweKolokwium2025_1.Services
                     }
                     
                     // 4.2 dodanie rekordów do tablicy Rental_Item
+                    Console.WriteLine("4.2");
                     string rentalItemQuery = @"Insert Into Rental_Item(rental_id, movie_id, price_at_rental) Values (@rental_id, @movie_id, @price_at_rental)";
                     foreach (int mowieId in mowiesIds)
                     {
                         using (SqlCommand cmd = new SqlCommand(rentalItemQuery, connection, transaction))
                         {
                             cmd.Parameters.AddWithValue("@rental_id", customerDto.id);
-                            cmd.Parameters.AddWithValue("@movie_id", customerDto.id);
-                            cmd.Parameters.AddWithValue("@price_at_rental", customerDto.mowies[mowieId].priceAtRental);
+                            cmd.Parameters.AddWithValue("@movie_id", mowieId);
+                            cmd.Parameters.AddWithValue("@price_at_rental", mowiesMap.GetValueOrDefault(mowieId).rentalPrice);
 
                             var result = await cmd.ExecuteNonQueryAsync();
-                            if (result == 0)
+                            Console.WriteLine("Result 4,2: " + result);
+                            if (result != 1)
                             {
                                 transaction.Rollback();
                                 return false;
                             }
                         }
                     }
+                    Console.WriteLine("koniec");
+                    transaction.Commit();
+                    Console.WriteLine("koniec");
                     return true;
                 }
                 catch(Exception)
