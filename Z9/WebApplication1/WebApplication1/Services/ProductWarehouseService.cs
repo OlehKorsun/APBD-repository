@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using WebApplication1.Models;
@@ -146,4 +147,37 @@ public class ProductWarehouseService : IProductWarehouseService
             }
         }
     }
+
+
+
+
+
+
+
+    public async Task<int> PostProductWarehouseProcedure(CreateProductWarehouseDTO dto)
+    {
+        int res = 0;
+        using (SqlConnection conn = new SqlConnection(_connectionString))
+        using (SqlCommand command = new SqlCommand("AddProductToWarehouse", conn))
+        {
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@IdProduct", dto.IdProduct);
+            command.Parameters.AddWithValue("@IdWarehouse", dto.IdWarehouse);
+            command.Parameters.AddWithValue("@Amount", dto.Amount);
+            command.Parameters.AddWithValue("@CreatedAt", dto.CreatedAt);
+            
+            await conn.OpenAsync();
+
+            var result = await command.ExecuteScalarAsync();
+            
+            if (result == null || result == DBNull.Value)
+            {
+                throw new Exception("Procedura nie zwróciła ID.");
+            }
+            res = Convert.ToInt32(result);
+        }
+        return res;
+    }
+    
+    
 }

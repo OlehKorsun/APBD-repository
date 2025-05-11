@@ -20,7 +20,7 @@ public class WarehouseController : ControllerBase
     {
         try
         {
-            var result = _productWarehouseService.PostProductWarehouse(dto);
+            var result = _productWarehouseService.PostProductWarehouseProcedure(dto);
             return Ok(result.Result);
         }
         catch (Exception ex)
