@@ -20,7 +20,7 @@ public class ProductWarehouseService : IProductWarehouseService
                         (Select Count(1) From Product Where IdProduct = @IdProduct), 
                         (Select Count(1) From Warehouse Where IdWarehouse = @IdWarehouse),
                         (Select IdOrder From Order Where IdProduct = @IdProduct And Amount = @Amount And CreatedAt < @CreatedAt),
-                        (Select Count(1) From ProductWarehouse Where IdOrder = @IdOrder)";
+                        (Select Count(1) From ProductWarehouse Where IdOrder = @IdOrder);";
         
         // Punkty 1, 2 oraz 3
         using (SqlConnection conn = new SqlConnection(_connectionString))
@@ -58,7 +58,7 @@ public class ProductWarehouseService : IProductWarehouseService
         }
 
         var dateTime = DateTime.Now;
-        query = @"Update Order Set FulfilledAt = @DateTime Where IdOrder = @IdOrder";
+        query = @"Update Order Set FulfilledAt = @DateTime Where IdOrder = @IdOrder;";
         
         // Punkt 4
         using(SqlConnection conn = new SqlConnection(_connectionString))
@@ -67,11 +67,77 @@ public class ProductWarehouseService : IProductWarehouseService
             await conn.OpenAsync();
             cmd.Parameters.AddWithValue("@DateTime", dateTime);
             cmd.Parameters.AddWithValue("@IdOrder", IdOrder);
+
+            var result = await cmd.ExecuteScalarAsync();
+
+            if (result == null)
+            {
+                throw new Exception("Nie udało się zaaktualizować czasu FulfilledAt");
+            }
+
         }
+
+
+        int newId = 0;
+        // Punkt 5
         
+        // Znalezienie nowego Id dla Product_Warehouse
+        query = "Select Max(IdProductWarehouse)+1 From Product_Warehouse;";
+        using (SqlConnection conn = new SqlConnection(_connectionString))
+        using (SqlCommand cmd = new SqlCommand(query, conn))
+        {
+            await conn.OpenAsync();
+            var res = await cmd.ExecuteScalarAsync();
+            if (res == null)
+            {
+                throw new Exception("Problem ze znalezieniem nowego idProductWarehouse");
+            }
+            newId = Convert.ToInt32(res);
+        }
+
+        decimal price = 0;
         
+        // Znalezienie ceny produktu
+        query = @"Select Price From Product Where IdProduct = @IdProduct;";
+        using (SqlConnection conn = new SqlConnection(_connectionString))
+        using (SqlCommand cmd = new SqlCommand(query, conn))
+        {
+            await conn.OpenAsync();
+            cmd.Parameters.AddWithValue("@IdProduct", dto.IdProduct);
+            var res = await cmd.ExecuteScalarAsync();
+            if (res == null)
+            {
+                throw new Exception("Problem ze znalezieniem ceny");
+            }
+            
+            price = Convert.ToDecimal(res);
+        }
+
+        int resultat = 0;
         
+        query = @"Insert Into Product_Warehouse (IdProductWarehouse, IdWarehouse, IdProduct, IdOrder, Amount, Price, CreatedAt)\
+                Values (@IdProductWarehouwe, @IdWarehouse, @IdProduct, @IdOrder, @Amount, @Price, @CreatedAt);";
         
-        return 0;
+        using (SqlConnection conn = new SqlConnection(_connectionString))
+        using (SqlCommand cmd = new SqlCommand(query, conn))
+        {
+            await conn.OpenAsync();
+            cmd.Parameters.AddWithValue("@IdProductWarehouse", newId);
+            cmd.Parameters.AddWithValue("@IdWarehouse", dto.IdWarehouse);
+            cmd.Parameters.AddWithValue("@IdProduct", dto.IdProduct);
+            cmd.Parameters.AddWithValue("@IdOrder", IdOrder);
+            cmd.Parameters.AddWithValue("@Amount", dto.Amount);
+            cmd.Parameters.AddWithValue("@Price", price*dto.Amount);
+            cmd.Parameters.AddWithValue("@CreatedAt", dateTime);
+            
+            var res = await cmd.ExecuteNonQueryAsync();
+            if (res != 1)
+            {
+                throw new Exception("Nie udało się dodać rekord do Product_Warehouse");
+            }
+
+            resultat = res;
+        }
+        return newId;
     }
 }
