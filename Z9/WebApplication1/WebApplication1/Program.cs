@@ -7,9 +7,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 
+builder.Services.AddScoped<IProductWarehouseService, ProductWarehouseService>();
+
+
 var app = builder.Build();
 
-builder.Services.AddScoped<IProductWarehouseService, ProductWarehouseService>();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

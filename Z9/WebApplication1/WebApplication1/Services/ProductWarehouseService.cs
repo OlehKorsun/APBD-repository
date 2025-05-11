@@ -19,8 +19,7 @@ public class ProductWarehouseService : IProductWarehouseService
         var query = @"Select 
                         (Select Count(1) From Product Where IdProduct = @IdProduct), 
                         (Select Count(1) From Warehouse Where IdWarehouse = @IdWarehouse),
-                        (Select IdOrder From Order Where IdProduct = @IdProduct And Amount = @Amount And CreatedAt < @CreatedAt),
-                        (Select Count(1) From ProductWarehouse Where IdOrder = @IdOrder);";
+                        (Select IdOrder From [Order] Where IdProduct = @IdProduct And Amount = @Amount And CreatedAt < @CreatedAt);";
         
         // Punkty 1, 2 oraz 3
         using (SqlConnection conn = new SqlConnection(_connectionString))
@@ -30,10 +29,14 @@ public class ProductWarehouseService : IProductWarehouseService
             cmd.Parameters.AddWithValue("@IdProduct", dto.IdProduct);
             cmd.Parameters.AddWithValue("@IdWarehouse", dto.IdWarehouse);
             cmd.Parameters.AddWithValue("@CreatedAt", dto.CreatedAt);
+            cmd.Parameters.AddWithValue("@Amount", dto.Amount);
 
             using (var reader = await cmd.ExecuteReaderAsync())
             {
-                await reader.ReadAsync();
+                if (!await reader.ReadAsync())
+                {
+                    throw new Exception("No records found");
+                }
                 if (reader.GetInt32(0) == 0)
                 {
                     throw new Exception("Nie znaleziono produktu");
@@ -50,15 +53,19 @@ public class ProductWarehouseService : IProductWarehouseService
                 
                 IdOrder = reader.GetInt32(2);
 
-                if (reader.GetInt32(3) == 0)
-                {
-                    throw new Exception("Zamówienie zostało przypadkiem zrealizowane");
-                }
+                // if (reader.GetInt32(3) == 0)
+                // {
+                //     throw new Exception("Zamówienie zostało przypadkiem zrealizowane");
+                // }
             }
         }
 
-        var dateTime = DateTime.Now;
-        query = @"Update Order Set FulfilledAt = @DateTime Where IdOrder = @IdOrder;";
+        
+
+        Console.WriteLine("Jestem tu!!!! -=-=-=-=-=-=-=-=-=-=-=");
+        DateTime dateTime = DateTime.Now;
+        Console.WriteLine(dateTime);
+        query = @"Update [Order] Set FulfilledAt = @DateTime Where IdOrder = @IdOrder;";
         
         // Punkt 4
         using(SqlConnection conn = new SqlConnection(_connectionString))
@@ -68,9 +75,9 @@ public class ProductWarehouseService : IProductWarehouseService
             cmd.Parameters.AddWithValue("@DateTime", dateTime);
             cmd.Parameters.AddWithValue("@IdOrder", IdOrder);
 
-            var result = await cmd.ExecuteScalarAsync();
+            var result = await cmd.ExecuteNonQueryAsync();
 
-            if (result == null)
+            if (result == 0)
             {
                 throw new Exception("Nie udało się zaaktualizować czasu FulfilledAt");
             }
@@ -79,21 +86,26 @@ public class ProductWarehouseService : IProductWarehouseService
 
 
         int newId = 0;
-        // Punkt 5
-        
-        // Znalezienie nowego Id dla Product_Warehouse
-        query = "Select Max(IdProductWarehouse)+1 From Product_Warehouse;";
-        using (SqlConnection conn = new SqlConnection(_connectionString))
-        using (SqlCommand cmd = new SqlCommand(query, conn))
-        {
-            await conn.OpenAsync();
-            var res = await cmd.ExecuteScalarAsync();
-            if (res == null)
-            {
-                throw new Exception("Problem ze znalezieniem nowego idProductWarehouse");
-            }
-            newId = Convert.ToInt32(res);
-        }
+        // // Punkt 5
+        //
+        // // Znalezienie nowego Id dla Product_Warehouse
+        // query = "Select Max(IdProductWarehouse)+1 From Product_Warehouse;";
+        // using (SqlConnection conn = new SqlConnection(_connectionString))
+        // using (SqlCommand cmd = new SqlCommand(query, conn))
+        // {
+        //     await conn.OpenAsync();
+        //     var res = await cmd.ExecuteScalarAsync();
+        //     if (res == null || res == DBNull.Value)
+        //     {
+        //         newId = 1;
+        //         //throw new Exception("Problem ze znalezieniem nowego idProductWarehouse");
+        //     }
+        //     else
+        //     {
+        //         newId = Convert.ToInt32(res);
+        //     }
+        //     
+        // }
 
         decimal price = 0;
         
@@ -112,17 +124,17 @@ public class ProductWarehouseService : IProductWarehouseService
             
             price = Convert.ToDecimal(res);
         }
-
-        int resultat = 0;
         
-        query = @"Insert Into Product_Warehouse (IdProductWarehouse, IdWarehouse, IdProduct, IdOrder, Amount, Price, CreatedAt)\
-                Values (@IdProductWarehouwe, @IdWarehouse, @IdProduct, @IdOrder, @Amount, @Price, @CreatedAt);";
+        
+        query = @"Insert Into Product_Warehouse (IdWarehouse, IdProduct, IdOrder, Amount, Price, CreatedAt)
+                Values (@IdWarehouse, @IdProduct, @IdOrder, @Amount, @Price, @CreatedAt);
+                Select Scope_Identity();";
         
         using (SqlConnection conn = new SqlConnection(_connectionString))
         using (SqlCommand cmd = new SqlCommand(query, conn))
         {
             await conn.OpenAsync();
-            cmd.Parameters.AddWithValue("@IdProductWarehouse", newId);
+            // cmd.Parameters.AddWithValue("@IdProductWarehouse", newId);
             cmd.Parameters.AddWithValue("@IdWarehouse", dto.IdWarehouse);
             cmd.Parameters.AddWithValue("@IdProduct", dto.IdProduct);
             cmd.Parameters.AddWithValue("@IdOrder", IdOrder);
@@ -130,13 +142,12 @@ public class ProductWarehouseService : IProductWarehouseService
             cmd.Parameters.AddWithValue("@Price", price*dto.Amount);
             cmd.Parameters.AddWithValue("@CreatedAt", dateTime);
             
-            var res = await cmd.ExecuteNonQueryAsync();
-            if (res != 1)
+            var res = await cmd.ExecuteScalarAsync();
+            if (res == null)
             {
                 throw new Exception("Nie udało się dodać rekord do Product_Warehouse");
             }
-
-            resultat = res;
+            newId = Convert.ToInt32(res);
         }
         return newId;
     }

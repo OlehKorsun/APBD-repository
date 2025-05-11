@@ -21,7 +21,7 @@ public class WarehouseController : ControllerBase
         try
         {
             var result = _productWarehouseService.PostProductWarehouse(dto);
-            return Ok(result);
+            return Ok(result.Result);
         }
         catch (Exception ex)
         {
