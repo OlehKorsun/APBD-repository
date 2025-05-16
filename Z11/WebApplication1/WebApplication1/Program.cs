@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using WebApplication.DAL;
 
@@ -7,7 +8,12 @@ string? connectionString = builder.Configuration.GetConnectionString("DefaultCon
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    // Żeby uniknąć pętli w zależnościach pomiędzy tabelami
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+    options.JsonSerializerOptions.WriteIndented = true;
+});
 builder.Services.AddDbContext<HospitalDbContext>(opt =>
 {
     opt.UseSqlServer(connectionString);
