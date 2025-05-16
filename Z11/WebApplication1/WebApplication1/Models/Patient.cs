@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApplication.Models;
 
+[Table("Patient")]
 public class Patient
 {
     [Key]
@@ -17,4 +19,6 @@ public class Patient
     
     [Required]
     public DateTime BirthDate { get; set; }
+    
+    public ICollection<Prescription> Prescriptions { get; set; }
 }

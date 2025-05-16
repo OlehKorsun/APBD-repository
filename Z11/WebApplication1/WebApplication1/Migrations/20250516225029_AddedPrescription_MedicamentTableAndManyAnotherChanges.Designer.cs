@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebApplication.DAL;
 
@@ -11,9 +12,11 @@ using WebApplication.DAL;
 namespace WebApplication.Migrations
 {
     [DbContext(typeof(HospitalDbContext))]
-    partial class HospitalDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250516225029_AddedPrescription_MedicamentTableAndManyAnotherChanges")]
+    partial class AddedPrescription_MedicamentTableAndManyAnotherChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -290,7 +293,7 @@ namespace WebApplication.Migrations
                 {
                     b.HasOne("WebApplication.Models.Medicament", "Medicament")
                         .WithMany("Prescription_Medicament")
-                        .HasForeignKey("IdMedicament")
+                        .HasForeignKey("IdPrescription")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
