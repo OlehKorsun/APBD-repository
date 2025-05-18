@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication.DAL;
 using WebApplication.Models;
+using WebApplication.Services;
 
 namespace WebApplication.Controllers;
 
@@ -10,20 +11,24 @@ namespace WebApplication.Controllers;
 public class PatientsController : ControllerBase
 {
 
-    private readonly HospitalDbContext _dbContext;
+    private readonly IPatientService _patientService;
 
-    public PatientsController(HospitalDbContext dbContext)
+    public PatientsController(IPatientService patientService)
     {
-        _dbContext = dbContext;
+        _patientService = patientService;
     }
     
     [HttpGet("{idPatient}")]
     public async Task<IActionResult> GetPatientByIdAsync(int idPatient)
     {
-        var result = await _dbContext.Patients
-            .Include(p => p.Prescriptions)
-            .ToListAsync();
-        return Ok();
+        var result = _patientService.GetPatients(idPatient);
+
+        if (result.Result == null)
+        {
+            return NotFound();
+        }
+        
+        return Ok(result.Result);
     }
     
 }

@@ -22,4 +22,8 @@ public class Prescription
     
     [ForeignKey(nameof(IdDoctor))]
     public Doctor Doctor { get; set; }
+    
+    public ICollection<Medicament> Medicaments { get; set; }
+    
+    public ICollection<Prescription_Medicament> Prescription_Medicaments { get; set; }
 }

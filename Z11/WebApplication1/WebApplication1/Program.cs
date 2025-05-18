@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using WebApplication.DAL;
+using WebApplication.Services;
 
 var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ builder.Services.AddDbContext<HospitalDbContext>(opt =>
 {
     opt.UseSqlServer(connectionString);
 });
+builder.Services.AddScoped<IPatientService, PatientService>();
 
 var app = builder.Build();
 
