@@ -20,6 +20,7 @@ builder.Services.AddDbContext<HospitalDbContext>(opt =>
     opt.UseSqlServer(connectionString);
 });
 builder.Services.AddScoped<IPatientService, PatientService>();
+builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 
 var app = builder.Build();
 

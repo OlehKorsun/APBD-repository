@@ -19,11 +19,11 @@ public class PatientsController : ControllerBase
     }
     
     [HttpGet("{idPatient}")]
-    public async Task<IActionResult> GetPatientByIdAsync(int idPatient)
+    public async Task<IActionResult> GetPatientByIdAsync(int idPatient, CancellationToken cancellationToken)
     {
         var result = _patientService.GetPatients(idPatient);
 
-        if (result.Result == null)
+        if (!result.Result.Any())
         {
             return NotFound();
         }
