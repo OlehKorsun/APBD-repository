@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication.DAL;
+using WebApplication.Exceptions;
 using WebApplication.Models;
 
 namespace WebApplication.Services;
@@ -48,6 +49,9 @@ public class PatientService: IPatientService
                         },
                     }).OrderBy(g => g.DueDate).ToList(),
                 }).ToListAsync();
+
+        if (result.Count == 0)
+            throw new PatientNotFoundException($"Nie znaleziono pacjenta o id: {id}");
         
         return result;
     }

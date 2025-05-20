@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WebApplication.DAL;
-using WebApplication.Models;
+using WebApplication.Exceptions;
 using WebApplication.Services;
 
 namespace WebApplication.Controllers;
@@ -19,16 +17,20 @@ public class PatientsController : ControllerBase
     }
     
     [HttpGet("{idPatient}")]
-    public async Task<IActionResult> GetPatientByIdAsync(int idPatient, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetPatientByIdAsync(int idPatient)
     {
-        var result = _patientService.GetPatients(idPatient);
-
-        if (!result.Result.Any())
+        try
         {
-            return NotFound();
+            var result = _patientService.GetPatients(idPatient);
+            return Ok(result.Result);
         }
-        
-        return Ok(result.Result);
+        catch (PatientNotFoundException e)
+        {
+            return BadRequest(e.Message);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
     }
-    
 }
