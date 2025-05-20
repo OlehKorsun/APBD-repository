@@ -6,6 +6,7 @@ using WebApplication.Services;
 var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
 
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+Console.WriteLine("connectionString: " + connectionString);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

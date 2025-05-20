@@ -21,7 +21,7 @@ public class PrescriptionsController : ControllerBase
     {
         try
         {
-            var res = _prescriptionService.AddPrescription(prescription);
+            var res = await _prescriptionService.AddPrescription(prescription);
             return Created();
         }
         catch (MedicamentNotFoundException e)
