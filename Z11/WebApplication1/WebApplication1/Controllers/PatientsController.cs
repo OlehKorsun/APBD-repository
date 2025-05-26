@@ -21,8 +21,8 @@ public class PatientsController : ControllerBase
     {
         try
         {
-            var result = _patientService.GetPatients(idPatient);
-            return Ok(result.Result);
+            var result = await _patientService.GetPatients(idPatient);
+            return Ok(result);
         }
         catch (PatientNotFoundException e)
         {
