@@ -1,8 +1,9 @@
+using WebApplication1.DTOs;
 using WebApplication1.Models;
 
 namespace WebApplication1.Services;
 
 public interface ITripService
 {
-    Task<IEnumerable<Trip>> GetTripsAsync();
+    Task<TripsResponse> GetTripsAsync(int? page, int? pageSize);
 }

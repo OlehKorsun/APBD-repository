@@ -16,8 +16,9 @@ public class TripsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetTrips()
+    public async Task<IActionResult> GetTrips([FromQuery] int? page, [FromQuery] int? pageSize)
     {
-        return Ok();
+        var res = await _tripService.GetTripsAsync(page, pageSize);
+        return Ok(res);
     }
 }
