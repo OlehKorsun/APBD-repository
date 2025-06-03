@@ -1,0 +1,25 @@
+NuGet: Microsofr...
+	AspNetCore.OpenApi
+	EntityFrameworkCore
+	EntityFrameworkCore.SqlServer
+	EntityFrameworkCore.Tools
+
+
+Connection String: 
+,
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=APBD;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False"
+  }
+
+uważaj na znaki \\ (musi być dokładnie 2)
+
+Console:
+Instalacja za pomocą komendy - dotnet tool install --global dotnet-ef
+
+Komenda do odtwarzania bazy danych (należy mieć dodany connectionString):
+dotnet ef dbcontext scaffold Name=ConnectionStrings:DefaultConnection --context-dir Data --output-dir Models Microsoft.EntityFrameworkCore.SqlServer
+
+Utworzenie migracji: 		dotnet ef migrations add Message
+Do zupdatowania bazy danych: 	dotnet ef database update
+
+Nie tworzyć foldery Data wraz z klasą DbContext, stworzy się automatycznie
