@@ -31,9 +31,9 @@ public partial class ApbdContext : DbContext
         OnModelCreatingPartial(modelBuilder);
         modelBuilder.Entity<Client>().HasData(new List<Client>()
         {
-            new Client(){ID = 1, FirstName = "CJohn", LastName = "Doe"},
-            new Client(){ID = 2, FirstName = "CJane", LastName = "Doe"},
-            new Client(){ID = 3, FirstName = "CJohn", LastName = "Doe"},
+            new Client(){ID = 1, FirstName = "CJohn", LastName = "Doe1"},
+            new Client(){ID = 2, FirstName = "CJane", LastName = "Doe2"},
+            new Client(){ID = 3, FirstName = "CJohn", LastName = "Doe3"},
         });
 
         modelBuilder.Entity<Employee>().HasData(new List<Employee>()

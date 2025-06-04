@@ -15,7 +15,7 @@ public class Order
     public DateTime? FulfilledAt { get; set; }
     
     [MaxLength(300)]
-    public string Comments { get; set; }
+    public string? Comments { get; set; }
     
     public int ClientID { get; set; }
     public int EmployeeID { get; set; }

@@ -13,6 +13,10 @@ Connection String:
 
 uważaj na znaki \\ (musi być dokładnie 2)
 
+
+Połączenie z localDB: (localdb)\MSSQLLocalDB
+
+
 Console:
 Instalacja za pomocą komendy - dotnet tool install --global dotnet-ef
 
