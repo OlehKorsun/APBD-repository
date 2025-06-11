@@ -20,10 +20,23 @@ Połączenie z localDB: (localdb)\MSSQLLocalDB
 Console:
 Instalacja za pomocą komendy - dotnet tool install --global dotnet-ef
 
-Komenda do odtwarzania bazy danych (należy mieć dodany connectionString):
-dotnet ef dbcontext scaffold Name=ConnectionStrings:DefaultConnection --context-dir Data --output-dir Models Microsoft.EntityFrameworkCore.SqlServer
-
 Utworzenie migracji: 		dotnet ef migrations add Message
 Do zupdatowania bazy danych: 	dotnet ef database update
 
-Nie tworzyć foldery Data wraz z klasą DbContext, stworzy się automatycznie
+Stworzyć foldery Data wraz z klasą DbContext, dodać tabeli (DbSet<Klasa> Nazwa), dodać do Program.sc, dodać przykładowe dane w metodzie: 
+protected override void OnModelCreating(ModelBuilder modelBuilder){}
+
+Do Program.cs dodać to:
+
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+    options.JsonSerializerOptions.WriteIndented = true;
+});
+
+oraz
+
+builder.Services.AddDbContext<ApbdContext>(opt =>
+{
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
