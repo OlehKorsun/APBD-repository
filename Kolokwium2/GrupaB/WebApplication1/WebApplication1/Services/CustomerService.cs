@@ -105,11 +105,12 @@ public class CustomerService : ICustomerService
                 };
                 // tickets.Add(newTicket);
                 await _context.Ticket.AddAsync(newTicket);
+                await _context.SaveChangesAsync();
 
                 var ticketConcert = new TicketConcert()
                 {
-                    Ticket = newTicket,
-                    Concert = concert,
+                    TicketId = newTicket.TicketId,
+                    ConcertId = concert.ConcertId,
                     Price = ticket.Price
                 };
                 ticketConcerts.Add(ticketConcert);
